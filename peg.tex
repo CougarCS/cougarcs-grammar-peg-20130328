@@ -1,0 +1,138 @@
+%% vim:tw=66:spell:wrap:ft=tex
+\documentclass[%
+        hyperref={%
+                pdfauthor={Zakariyya Mughal},%
+                pdfpagemode={None},pdfpagelayout={SinglePage}}%
+        xcolor={x11names},%
+]{beamer}
+\usetheme{Warsaw}
+\usecolortheme{crane}
+\usepackage{textcomp}
+\usepackage{fancyvrb}
+\usepackage{changepage}
+\usepackage{framed}
+\usepackage{multicol}
+\usepackage{wasysym}
+\usepackage{listings}
+\lstset{basicstyle=\ttfamily,
+numbers=left,
+escapeinside=||
+}
+\usepackage[T1]{fontenc}
+\newenvironment{indented}{\begin{adjustwidth}{1.5em}{}}{\end{adjustwidth}}
+
+\usepackage{tikz}
+\usetikzlibrary{snakes,arrows,shapes,automata}
+
+\title[PEG]{Parsing expression grammar}
+\author{Zaki Mughal}
+\institute{University of Houston:\\CougarCS}
+\date{2013 Mar 28}
+\begin{document}
+
+\frame{\titlepage}
+
+\begin{frame}
+	\textbf{Parsing expression grammars} can be used to match text.
+	\\\pause\qquad So can \textbf{regular expressions}.
+	\\\pause\qquad\qquad Why learn both?
+\end{frame}
+
+\begin{frame}[fragile]
+	Regular expressions can't match:\\
+		\pause 1 + 2 * ( 1 + 4 )
+		\pause \lstinputlisting[numbers=none,tabsize=2,language=html]{example.html}
+		\pause \lstinputlisting[numbers=none,tabsize=2,language=c]{example.c}
+\end{frame}
+
+\begin{frame}
+	\begin{center} \Huge We need a grammar. \end{center}
+\end{frame}
+
+\begin{frame}
+	\begin{center} \Huge Grammars are recursive. \end{center}
+\end{frame}
+
+\begin{frame}
+	Here's part of a grammar:
+	\begin{framed}
+		\lstinputlisting[basicstyle=\tiny]{java.ebnf}
+	\end{framed}
+	This is from the \href{http://docs.oracle.com/javase/specs/jls/se7/html/jls-18.html}{Java Language Specification}
+\end{frame}
+
+\begin{frame}
+	A single production rule:
+	\lstinputlisting{java-explain.ebnf}
+\end{frame}
+\begin{frame}
+	A single production rule:
+	\lstinputlisting{java-explain-more.ebnf}
+\end{frame}
+
+\begin{frame}
+	\Huge But there's a problem \\
+	\pause \qquad when you have alternatives \\
+	\pause \qquad \qquad you have ambiguity
+	\pause Which alternative to follow --- multiple trees
+\end{frame}
+
+\begin{frame}
+    \Huge
+    Let's eat Grandma! \\
+    \pause\qquad uh\ldots \\
+    \pause Let's eat, Grandma! \\
+    \pause\qquad *wipes brow* \\
+\end{frame}
+
+\begin{frame}
+	\begin{itemize}
+		\item Ambiguity happens often with (context-free)
+			grammars\footnote{These are part of the Chomsky hierarchy
+			along with regular expressions.}.
+		\pause\item Alternatives: leftmost, rightmost
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\begin{itemize}
+		\item PEG is simpler.
+		\pause\item It follows the first alternative that
+			matches.
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\begin{center}
+		\Huge
+		Let's write a calculator!
+	\end{center}
+	\begin{itemize}
+		\item Operation: +- */ (with precedence)
+		\item parentheses group operations
+		\item variable assignment (a -- z)
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	Future:
+	\begin{itemize}
+		\item longer variable names
+		\item negative sign (-1)
+		\item decimal numbers (1.25)
+		\item functions (\(\ln\)), constants (\(\pi\))
+		\item implicit multiplication (\(2a\))
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\begin{itemize}
+		\item \href{http://bford.info/packrat/}{The Packrat Parsing and Parsing Expression Grammars Page}
+		\item \href{http://piumarta.com/software/peg/}{peg/leg (C)}
+		\item \href{http://pyparsing.wikispaces.com/}{pyparsing (Python)}
+		\item \href{http://pegex.org/}{Pegex (Perl)}
+	\end{itemize}
+\end{frame}
+
+
+\end{document}

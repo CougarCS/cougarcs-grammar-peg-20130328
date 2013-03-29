@@ -1,0 +1,26 @@
+ClassBody: 
+    { { ClassBodyDeclaration } }
+
+ClassBodyDeclaration:
+    ; 
+    {Modifier} MemberDecl
+    [static] Block
+
+MemberDecl:
+    MethodOrFieldDecl
+    void Identifier VoidMethodDeclaratorRest
+    Identifier ConstructorDeclaratorRest
+    GenericMethodOrConstructorDecl
+    ClassDeclaration
+    InterfaceDeclaration
+
+Block: 
+    { BlockStatements }
+
+BlockStatements: 
+    { BlockStatement }
+
+BlockStatement:
+    LocalVariableDeclarationStatement
+    ClassOrInterfaceDeclaration
+    [Identifier :] Statement

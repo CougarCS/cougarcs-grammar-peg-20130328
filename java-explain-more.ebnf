@@ -1,0 +1,10 @@
+ClassBodyDeclaration:     |\textrm{non-terminal matches:}|
+    ;                     |\textrm{matches a literal} ; \textrm{\emph{or}}|
+
+    {Modifier} MemberDecl |\textrm{0 or more \texttt{Modifier} non-terminal}|
+                          |\textrm{followed by a \texttt{MemberDecl}}|
+                          |\textrm{non-terminal \emph{or}}|
+
+    [static] Block        |\textrm{optional (0 or 1) terminal}|
+                          |\textrm{(the token \texttt{static})}|
+                          |\textrm{followed by a \texttt{Block} non-terminal}|

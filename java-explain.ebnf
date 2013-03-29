@@ -1,0 +1,10 @@
+ClassBodyDeclaration:     |\textrm{(non-terminal)} \pause|
+    ;                     |\textrm{(alternative 1)} \pause|
+
+    {Modifier} MemberDecl |\textrm{(alternative 2)} \pause|
+
+
+
+    [static] Block        |\textrm{(alternative 3)}|
+
+||
