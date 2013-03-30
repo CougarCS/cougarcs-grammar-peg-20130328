@@ -7,7 +7,7 @@ peg.pdf: peg.tex \
 	java.ebnf java-explain.ebnf java-explain-more.ebnf
 	latexmk -g -pdf peg.tex
 
-run: lang/calc.c.run lang/calc.py.run
+run: lang/calc.c.run lang/calc.py.run lang/calc.pl.run
 
 %.peg.c: %.peg
 	$(PEG) -o $@ $<
@@ -22,6 +22,9 @@ lang/calc.c.run:	lang/calc
 
 lang/calc.py.run:	lang/calc.py
 	python ./lang/calc.py < ./lang/calculator.in
+
+lang/calc.pl.run:	lang/calc.pl
+	perl ./lang/calc.pl < ./lang/calculator.in
 
 cleanlang:
 	-rm lang/calc lang/calc.c
