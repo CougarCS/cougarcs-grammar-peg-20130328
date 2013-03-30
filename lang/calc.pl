@@ -8,6 +8,8 @@ use Data::Printer { max_depth => 0 };
 # Pegex::Grammar::Atoms
 # Pegex::Grammar
 # Pegex::Syntax
+use Forest::Tree::Writer::ASCIIWithBranches;
+use Forest::Tree::Writer::SimpleASCII;
 
 my $grammar = <<'END'
 
@@ -15,13 +17,15 @@ top: stmt*
 stmt: expr endstmt
 expr: add_sub | assign
 assign: variable opassign add_sub
-add_sub: mul_div+ % /~([<PLUS><DASH>])~/
-mul_div: token+ % /~([<STAR><SLASH>])~/
+add_sub: mul_div+ % opadd
+mul_div: token+ % opmult
 token: /~<LPAREN>~/ expr /~<RPAREN>~/ | number | variable !opassign
 
 # Lexemes
 number: w /(<DASH>?<DIGIT>+)/ w
 variable: w /([a-z])/ w
+opadd: w /([<PLUS><DASH>])/ w
+opmult: w /([<STAR><SLASH>])/ w
 opassign: w /([<EQUAL>])/ w
 endstmt: w /<EOL>|[<SEMI>]|<EOS>/ w
 w: /[<SPACE><TAB>]*/
@@ -78,85 +82,92 @@ my $variables = [ (0) x 26 ]; # used in get_op_as_number and actions
 		@$list;
 	}
 }
+{
+	package CalculatorTree;
+	use base 'Pegex::Tree';
+	use Scalar::Util qw/blessed/;
+	use Forest::Tree;
+
+	sub build_nodes {
+		my ($self, $list) = @_;
+		[ map { Forest::Tree->new( node => $_ ) } @$list ];
+	}
+
+	sub got_number {
+		my ($self, $list) = @_;
+		$self->build_nodes($list);
+	}
+	sub got_variable {
+		my ($self, $list) = @_;
+		$self->build_nodes($list);
+	}
+	sub got_opadd {
+		my ($self, $list) = @_;
+		$self->build_nodes($list);
+	}
+	sub got_opassign {
+		my ($self, $list) = @_;
+		$self->build_nodes($list);
+	}
+	sub got_opmult {
+		my ($self, $list) = @_;
+		$self->build_nodes($list);
+	}
+
+
+	sub op_tree {
+		my ($self, $list) = @_;
+		$self->flatten($list);
+		my $root = shift @$list;
+		while (@$list > 1) {
+			my ($op, $b) = splice(@$list, 0, 2);
+			$op->add_children($root);
+			$op->add_children($b);
+			$root = $op;
+		}
+		$root;
+	}
+
+	sub got_add_sub {
+		my ($self, $list) = @_;
+		$self->op_tree($list);
+	}
+
+	sub got_mul_div {
+		my ($self, $list) = @_;
+		$self->op_tree($list);
+	}
+
+	sub got_assign {
+		my ($self, $list) = @_;
+		$self->op_tree($list);
+	}
+}
 
 
 my $calculator = pegex($grammar, receiver => 'Calculator');
 my $pegex_tree = pegex($grammar, receiver => 'Pegex::Tree');
+my $calc_tree = pegex($grammar, receiver => 'CalculatorTree');
 
-my $term = Term::ReadLine->new('Calculator', \*STDIN, \*STDOUT);
-$term->ornaments(0);
+my $term = Term::ReadLine->new('Calculator', \*STDIN, \*STDOUT); # we want stdin to be redirectable
+$term->ornaments(0); # no underline
 
 while ( defined ($_ = $term->readline('> ')) ) {
 	chomp(my $expr = $_);
-	my $result = eval { [ $calculator->parse($expr), $pegex_tree->parse($expr) ] };
+	my $result = eval { [ $calculator->parse($expr), $pegex_tree->parse($expr), $calc_tree->parse($expr) ] };
 	if($@) {
 		print $@
 	} else {
 		for my $statement (0..@{$result->[0]}) {
 			my $calc = Pegex::Tree->flatten($result->[0])->[$statement];
 			next unless defined $calc;
-			my $tree_str = $result->[1]->[$statement]->[0];
-			my $comment_tree = p( $tree_str ) =~ s/^/#/gmr;
+			my $ptree = $result->[1]->[$statement]->[0];
+			my $comment_ptree = p( $ptree ) =~ s/^/#/gmr;
+			my $ctree = $result->[2]->[$statement]->[0];
+			#my $ctree_write = Forest::Tree::Writer::ASCIIWithBranches->new(tree => $ctree);
+			my $ctree_write = Forest::Tree::Writer::SimpleASCII->new(tree => $ctree);
 			print "$calc\n";
-			#print "$comment_tree\n";
+			print $ctree_write->as_string =~ s/^/# /gmr;
 		}
 	}
 }
-
-__END__
-use Scalar::Util qw/blessed/;
-use Forest::Tree::Writer::ASCIIWithBranches;
-use Forest::Tree::Writer::SimpleASCII;
-{
-	package CalculatorTree;
-	use base 'Pegex::Tree';
-	use Forest::Tree;
-
-	sub got_add_sub {
-		my ($self, $list) = @_;
-		$self->flatten($list);
-		my $right = Forest::Tree->new( node => pop @$list );
-		push @$list, $right;
-		while (@$list > 1) {
-			my ($a, $op, $t_b) = splice(@$list, -3);
-			my $new_root = Forest::Tree->new( node => $op );
-			my $t_a = Forest::Tree->new( node => $a );
-			$new_root->add_children($t_a, $t_b);
-			push @$list, $new_root;
-		}
-		pop @$list;
-	}
-
-	sub got_mul_div {
-		my ($self, $list) = @_;
-		$self->flatten($list);
-		my $right = Forest::Tree->new( node => pop @$list );
-		push @$list, $right;
-		while (@$list > 1) {
-			my ($a, $op, $t_b) = splice(@$list, -3);
-			my $new_root = Forest::Tree->new( node => $op );
-			my $t_a = Forest::Tree->new( node => $a );
-			$new_root->add_children($t_a, $t_b);
-			push @$list, $new_root;
-		}
-		pop @$list;
-	}
-
-	sub got_assign {
-	}
-}
-		for my $tree (@{$result->[0]}) {
-			next unless blessed $tree;
-			use DDP; p $tree;
-			use DDP; p $tree->get_child_at(0)->node;
-			my $w = Forest::Tree::Writer::ASCIIWithBranches->new(tree => $tree);
-			#my $w = Forest::Tree::Writer::SimpleASCII->new(tree => $tree);
-			print $w;
-			print $w->as_string;
-			$tree->visit(sub {
-				my $t = shift;
-				print $t->depth, "\n";
-				print(('    ' x ($t->depth + 1)) . ($t->node || '\undef') . "\n");
-			});
-		}
-# vim: ts=4
