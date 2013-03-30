@@ -1,6 +1,6 @@
 include Makefile.config
 
-all: peg.pdf lang/calc
+all: peg.pdf
 
 peg.pdf: peg.tex \
 	example.c example.html \
